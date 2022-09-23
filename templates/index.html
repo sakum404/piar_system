@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+
+{% block title %}PIAR Page{% endblock %}
+
+
+{% block body %}
+
+  <table>
+    <tr>
+      <th width="7%">BSG Purchase Requisition No.</th>
+      <th width="6%">Date</th>
+      <th>Requisitioner</th>
+      <th width="30%">Description of Materials or Services</th>
+      <th width="10%">Contract / PO / Invoice</th>
+      <th>Supplier</th>
+      <th>Total value</th>
+<!--      <th>Buyer</th>-->
+      <th>Download Piar</th>
+    </tr>
+   {% for el in articles %}
+    <tr>
+      <td>SVR-PR-{{ '{:05}'.format(el.id) }}</td>
+      <td>{{el.date.date()}}</td>
+      <td>{{ el.requis }}</td>
+      <td>{{ el.desc }}</td>
+      <td>{{ el.invoice }}</td>
+      <td>{{el.vendor}}</td>
+      <td>{{el.total_price}} </td>
+<!--      <td>{{ el.requis }}</td>-->
+      <td><a href="/index/{{ el.id }}" class="btn btn-primary btn-sm">Open</a></td>
+    </tr>
+   {% endfor %}
+  </table>
+
+{% endblock %}

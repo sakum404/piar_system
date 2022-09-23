@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Create Piar
+{% endblock %}
+
+
+{% block body %}
+<div class="container">
+  <body>
+    <div class="col-md-5">
+        <form name="Item_1" action="/getLigand" method="POST">
+          <label for="names" class="form-label">Choose colour</label>
+            <select class="form-select" name="names" id="names">
+              {% for name in names %}
+                <option value="{{ name }}" SELECTED>{{ name }}</option>
+              {% endfor %}
+            </select>
+        </form>
+    </div>
+
+  </body>
+</div>
+
+{% endblock %}

@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Create Piar
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <div class="col-md-7 col-lg-8">
+    <h4 class="mb-3">PURCHASE REQUISITION</h4>
+    <form method="POST" class="needs-validation">
+      <div class="row g-4">
+
+        <div class="col-sm-6">
+          <label for="requis" class="form-label">Requisitioner</label>
+          <select name="requis" id="requis" class="form-select">
+            <option value="">Requisitioner...</option>
+            {% for name in names %}
+            <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+
+        <div class="col-sm-6">
+          <label for="vendor" class="form-label">Recommended vendor</label>
+          <input type="text" class="form-control" name="vendor" id="vendor">
+        </div>
+
+        <div class="col-12">
+          <label for="desc" class="form-label">Description of Materials or Services</label>
+          <div class="input-group  has-validation">
+            <textarea name="desc" id="desc" cols="30" rows="3" class="form-control"></textarea>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <label for="invoice" class="form-label">Invoice
+          <span class="text-muted">(Optional)</span></label>
+          <div class="input-group has-validation">
+            <textarea name="invoice" id="invoice" class="form-control"></textarea>
+          </div>
+        </div>
+
+
+        <hr class="my-4">
+        <p>
+          <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+            Add Piar Index</a>
+        </p>
+
+          <div class="collapse" id="collapseExample">
+             <div class="card card-body">
+               <div class="row g-6">
+                 <div class="col-sm-5">
+                   <input type="text" class="form-control" name="respon" id="respon" placeholder="Person responsible"><br>
+                 </div>
+                 <div class="col-sm-5">
+                    <div class="input-group col-6">
+                      <div class="col-3">
+                        <select name="currency" id="currency" class="form-select">
+                          <option value="KZT">KZT</option>
+                          <option value="USA">USA</option>
+                          <option value="GBR">GBR</option>
+                          <option value="RUB">RUB</option>
+                          <option value="EUR">EUR</option>
+                        </select>
+                      </div>
+                      <input type="number" class="form-control" name="unit_price" id="unit_price" placeholder="Unit Price">
+                      <span class="input-group-text">.00</span>
+                    </div>
+                 </div>
+                 <div class="col-sm-2">
+                   <input type="number" class="form-control" name="quality" id="quality" placeholder="Quantity"><br>
+                 </div>
+                 <div class="col-sm-2">
+                   <input type="text" class="form-control" name="cost" id="cost" placeholder="cost"><br>
+                 </div>
+                 <div class="col-sm-2">
+                   <input type="text" class="form-control" name="purpose" id="purpose" placeholder="purpose"><br>
+                 </div>
+                <div class="col-12">
+                  <div class="input-group  has-validation">
+                    <textarea name="unit_desc" id="unit_desc" cols="30" rows="3" class="form-control" placeholder="Description of Materials or Services"></textarea><br>
+                  </div>
+                </div>
+               </div>
+               <br>
+               <p>
+                 <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample1" role="button" aria-expanded="false" aria-controls="collapseExample">Add another one</a>
+               </p>
+          </div><br>
+          <div class="collapse" id="collapseExample1">
+             <div class="card card-body">
+               <div class="row g-6">
+                 <div class="col-sm-5">
+                   <input type="text" class="form-control" name="respon1" id="respon1" placeholder="Person responsible"><br>
+                 </div>
+                 <div class="col-sm-5">
+                    <div class="input-group col-6">
+                      <div class="col-3">
+                        <select name="currency" id="currency1" class="form-select">
+                          <option value="KZT">KZT</option>
+                          <option value="USA">USA</option>
+                          <option value="GBR">GBR</option>
+                          <option value="RUB">RUB</option>
+                          <option value="EUR">EUR</option>
+                        </select>
+                      </div>
+                      <input type="number" class="form-control" name="unit_price" id="unit_price1" placeholder="Unit Price">
+                      <span class="input-group-text">.00</span>
+                    </div>
+                 </div>
+                 <div class="col-sm-2">
+                   <input type="number" class="form-control" name="quality" id="quality1" placeholder="Quantity"><br>
+                 </div>
+                 <div class="col-sm-2">
+                   <input type="text" class="form-control" name="cost" id="cost1" placeholder="cost"><br>
+                 </div>
+                 <div class="col-sm-2">
+                   <input type="text" class="form-control" name="purpose" id="purpose1" placeholder="purpose"><br>
+                 </div>
+                <div class="col-12">
+                  <div class="input-group  has-validation">
+                    <textarea name="unit_desc" id="unit_desc1" cols="30" rows="3" class="form-control" placeholder="Description of Materials or Services"></textarea><br>
+                  </div>
+                </div>
+               </div>
+               <br>
+               <p>
+                 <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample2" role="button" aria-expanded="false" aria-controls="collapseExample">Add another one</a>
+               </p>
+          </div><br>
+            <button class="w-100 btn btn-primary btn-lg" type="submit">Continue to checkout</button>
+
+<!--               <div class="row g-6">-->
+<!--                 <div class="col-sm-4">-->
+<!--                   <select name="" id="" class="form-select">-->
+<!--                      <option value="">Types</option>-->
+<!--                      {% for type in types %}-->
+<!--                      <option value="{{ type }}">{{ type }}</option>-->
+<!--                      {% endfor %}-->
+<!--                    </select>-->
+<!--                 </div>-->
+<!--                 <div class="col-sm-8">-->
+<!--                   <select name="" id="" class="form-select">-->
+<!--                      <option value="">Cost Center</option>-->
+<!--                      {% for cost in cost_center %}-->
+<!--                      <option value="{{ cost }}">{{ cost }}</option>-->
+<!--                      {% endfor %}-->
+<!--                    </select>-->
+<!--                 </div>-->
+<!--               </div>-->
+
+
+
+
+
+
+
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
