@@ -22,7 +22,7 @@ data.append(data3)
 # фильтруем пустые значние
 out = filter(None, data)
 
-# добавляем данные из списка к excel
+# добавляем данные из списка в excel
 for i, statdata1 in enumerate(data):
     ws.cell(row=1+i, column=1).value = statdata1
 

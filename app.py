@@ -1,29 +1,23 @@
 from flask import Flask, render_template, url_for, request, redirect, send_file
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-import openpyxl as exl
 from flask_migrate import Migrate
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-engine = create_engine('sqlite:///database.db', echo=True)
-
-
-
-wb = exl.load_workbook(filename="bsg.xlsx")
-ws = wb.active
-sheet = wb["BSG-PR"]
-
+import openpyxl as exl
+from openpyxl.styles import Font ,Alignment,Border,Side
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-# migrate = Migrate(app, db)
+migrate = Migrate(app, db)
+engine = create_engine('sqlite:///database.db', echo=True)
 
-
+Session = sessionmaker(bind=engine)
+session = Session()
 
 class Article(db.Model):
     __tablename__ = 'article'
@@ -34,8 +28,6 @@ class Article(db.Model):
     invoice = Column(Text)
     date = Column(DateTime, default=datetime.utcnow)
     piar = relationship('Piar', backref='article', lazy='dynamic')
-
-
 
 
 class Piar(db.Model):
@@ -49,16 +41,12 @@ class Piar(db.Model):
     cost = Column(Text, nullable=True)
     article_id = Column(Integer, ForeignKey('article.id'))
 
-
-
 @app.route('/index')
 @app.route('/')
 def index():
     articles = Article.query.order_by(Article.id.desc()).all()
     return render_template('index.html', articles=articles)
 
-Session = sessionmaker(bind=engine)
-session = Session()
 
 @app.route('/create', methods=['POST', 'GET'])
 def create():
@@ -181,32 +169,81 @@ def create():
 
         return render_template('create.html',  names=names, articles=articles, piars=piars)
 
+# config openpyxl
+wb = exl.load_workbook(filename="bsg.xlsx")
+ws = wb.active
+sheet = wb["BSG-PR"]
+font_style = Font(name='Verdana', sz='11')
+alig_style_left = Alignment(wrapText=True, horizontal='left', vertical='center')
+alig_style_right = Alignment(wrapText=True, horizontal='right', vertical='center')
+alig_style_center = Alignment(wrapText=True, horizontal='center', vertical='center')
+top = Side(border_style='thin')
+bottom = Side(border_style='thin')
+left = Side(border_style='thin')
+right = Side(border_style='thin')
+border = Border(top=top, left=left, right=right, bottom=bottom)
+border_bottom_top = Border(bottom=Side(border_style='thin'), top=Side(border_style='thin'))
+nextrow = sheet.max_row + 1
 @app.route('/index/<int:id>', methods=['GET', 'POST'])
 def getCSV(id):
-    abc = [id]
-    value = Article.query.filter(Article.id.in_(abc)).all()
-    for xl in value:
-        ws['E4'] = 'SVR-PR-'+'{:05}'.format(xl.id)
-        ws['F19'] = xl.name
-        ws['I4'] = xl.supp
-        ws['C19'] = xl.text
-        ws['N19'] = xl.price
-        ws['E5'] = xl.date
+        abc = [id]
+        value = Article.query.filter(Article.id.in_(abc)).all()
+        piar_value = Piar.query.filter(Piar.article_id.in_(abc)).all()
+
+        for i, lx in enumerate(piar_value):
+            ws.merge_cells(f'C{19+i}:D{19+i}')
+            ws.merge_cells(f'F{19 + i}:G{19 + i}')
+            ws.merge_cells(f'J{19 + i}:K{19 + i}')
+            ws[f'D{19 + i}'].border = border_bottom_top
+            ws[f'G{19 + i}'].border = border_bottom_top
+            ws[f'K{19 + i}'].border = border_bottom_top
+
+            ws[f'B{19 + i}'].border = border
+            ws[f'B{19 + i}'].value = 1+i
+            ws[f'B{19 + i}'].font = font_style
+            ws.row_dimensions[20 + i].height = 71
+            ws[f'B{19 + i}'].alignment = alig_style_center
+
+            ws[f'C{19+i}'].border = border
+            ws[f'C{19+i}'].value = lx.unit_desc
+            ws[f'C{19 + i}'].font = font_style
+            ws.row_dimensions[20+i].height = 71
+            ws[f'C{19 + i}'].alignment = alig_style_center
+
+            ws[f'E{19 + i}'].border = border
+            ws[f'E{19 + i}'].value = lx.quality
+            ws[f'E{19 + i}'].font = font_style
+            ws.row_dimensions[20 + i].height = 71
+            ws[f'E{19 + i}'].alignment = alig_style_center
+
+            ws[f'F{19 + i}'].border = border
+            ws[f'F{19 + i}'].value = lx.respon
+            ws[f'F{19 + i}'].font = font_style
+            ws.row_dimensions[20 + i].height = 71
+            ws[f'F{19 + i}'].alignment = alig_style_center
+
+            ws[f'L{19 + i}'].border = border
+            ws[f'L{19 + i}'].value = lx.cost
+            ws[f'L{19 + i}'].font = font_style
+            ws.row_dimensions[20 + i].height = 71
+            ws[f'L{19 + i}'].alignment = alig_style_center
+
+            ws[f'M{19 + i}'].border = border
+            ws[f'M{19 + i}'].value = lx.unit_price
+            ws[f'M{19 + i}'].font = font_style
+            ws.row_dimensions[20 + i].height = 71
+            ws[f'M{19 + i}'].alignment = alig_style_center
+
+        for xl in value:
+            ws['E4'] = 'SVR-PR-' + '{:05}'.format(xl.id)
+            ws['I19'] = xl.vendor
+            ws[f'I{nextrow}'] = xl.vendor
+            ws['I4'] = xl.requis
+            ws['E5'] = xl.date
+
         wb.save('test.xlsx')
 
-    return send_file(download_name='save.xlsx', path_or_file='test.xlsx')
-
-
-@app.route('/test')
-def test():
-    return render_template('test.html')
-
-@app.route('/search')
-def search_piar():
-    params = {name: request.args.get(name) for name in ['id', 'text', 'name']}
-    params = {k: v for k, v in params.items() if v} # отфильтровываем пустые параметры
-    book = Article.query.filter_by(**params).first_or_404()
-    return render_template('show_book.html', book=book)
+        return send_file(download_name='save.xlsx', path_or_file='test.xlsx')
 
 if __name__=='__main__':
     app.run(debug=True, port='8080')
