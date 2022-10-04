@@ -1,30 +1,35 @@
-from flask import Flask, render_template, url_for, request, redirect, send_file
+import io
+from flask import Flask, render_template, url_for, request, redirect, send_file, send_from_directory,Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from flask_migrate import Migrate
+# from flask_migrate import Migrate
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import openpyxl as exl
 from openpyxl.styles import Font ,Alignment,Border,Side
+import os
+from tempfile import NamedTemporaryFile
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+# migrate = Migrate(app, db)
 engine = create_engine('sqlite:///database.db', echo=True)
+
 
 Session = sessionmaker(bind=engine)
 session = Session()
+
 
 class Article(db.Model):
     __tablename__ = 'article'
     id = Column(Integer, primary_key=True)
     requis = Column(String(50))
-    vendor = Column(Text, nullable=True)
-    desc = Column(Text)
+    vendor = Column(Text, nullable=False)
+    desc = Column(Text, nullable=False)
     invoice = Column(Text)
     date = Column(DateTime, default=datetime.utcnow)
     piar = relationship('Piar', backref='article', lazy='dynamic')
@@ -33,19 +38,21 @@ class Article(db.Model):
 class Piar(db.Model):
     __tablename__ = 'piar'
     id = Column(Integer, primary_key=True)
-    unit_price = Column(Integer)
-    unit_desc = Column(Text)
-    purpose = Column(Text, nullable=True)
-    quality = Column(Integer)
-    respon = Column(String(100), nullable=True)
-    cost = Column(Text, nullable=True)
+    unit_price = Column(Integer, nullable=False)
+    unit_desc = Column(Text, nullable=False)
+    purpose = Column(Text, nullable=False)
+    quality = Column(Integer, nullable=False)
+    respon = Column(String(100), nullable=False)
+    cost = Column(Text, nullable=False)
     article_id = Column(Integer, ForeignKey('article.id'))
+
 
 @app.route('/index')
 @app.route('/')
 def index():
     articles = Article.query.order_by(Article.id.desc()).all()
     return render_template('index.html', articles=articles)
+
 
 
 @app.route('/create', methods=['POST', 'GET'])
@@ -59,30 +66,8 @@ def create():
         date = request.form.get('date')
         requis = request.form['requis']
         invoice = request.form['invoice']
-        currency = request.form['currency']
+        # currency = request.form['currency']
         # total_price2 = f'{total_price} {currency}'
-
-        try:
-            # form for purchsing
-            unit_desc = request.form['unit_desc']
-            unit_price = request.form['unit_price']
-            # unit_total_price = request.form['unit_total_price']
-            purpose = request.form['purpose']
-            quality = request.form['quality']
-            cost = request.form['cost']
-            respon = request.form['respon']
-
-
-            unit_desc1 = request.form['unit_desc1']
-            unit_price1 = request.form['unit_price1']
-            # unit_total_price = request.form['unit_total_price']
-            purpose1 = request.form['purpose1']
-            quality1 = request.form['quality1']
-            cost1 = request.form['cost1']
-            respon1 = request.form['respon1']
-
-        except:
-            return 'error add piar'
 
 
         article = Article(id=id,
@@ -92,56 +77,16 @@ def create():
                           desc=desc,
                           vendor=vendor,
                           date=date)
-        try:
-            piar = Piar(unit_price=unit_price,
-                        unit_desc=unit_desc,
-                        # unit_total_price=unit_total_price,
-                        purpose=purpose,
-                        respon=respon,
-                        quality=quality,
-                        cost=cost,
-                        article=article
-                        )
-            piar1 = Piar(unit_price=unit_price1,
-                        unit_desc=unit_desc1,
-                        # unit_total_price=unit_total_price,
-                        purpose=purpose1,
-                        respon=respon1,
-                        quality=quality1,
-                        cost=cost1,
-                        article=article
-                        )
-        except:
-            return 'error with piara'
 
 
-        try:
-            session.add(article)
-            session.add_all([piar, piar1])
-            session.commit()
-            return redirect('/index')
-        except:
-            return 'error database'
+
+
+        session.add(article)
+        session.commit()
+        return redirect('/index')
+
     else:
         articles = Article.query.all()
-        piars = Piar.query.all()
-
-
-
-        cost_center = ['Workshop equipment | Оборудование для цеха',
-                       'Workshop tools | Инструменты для цеха',
-                       'Workshop consumables | Расходные материалы для цеха',
-                       'PPE, Safety equipment |СИЗ и оборудование по ТБ',
-                       'Office equipment and furniture | Офисное оборудование и мебель',
-                       'Office consumables and stationary | Расходные материалы и канцелярские товары ',
-                       'Purchase of services for workshop | Услуги для цеха',
-                       'Car maintenance and car consumables | Обслуживание автомобилей и расходные материалы к автомобилям',
-                       'Office maintenance (household expenses, tea, cofffee) | Обеспечение офиса',
-                       'Repair of fixed assets | Ремонт основных средств',
-                       'Third-party services | Услуги третьей стороны',
-                       'Trainings | Тренинги',
-                       'IT software applications, licenses, etc',
-                       ]
 
 
 
@@ -167,10 +112,41 @@ def create():
                  'Aimira Dzhumagalieva',
                  'Shynar Ramazanova']
 
-        return render_template('create.html',  names=names, articles=articles, piars=piars)
+        return render_template('create.html',  names=names, articles=articles)
+
+
+@app.route('/index/<int:id>/pr', methods=['POST', 'GET'])
+def getPR(id):
+    if request.method == "POST":
+        unit_price = request.form['unit_price']
+        unit_desc = request.form['unit_desc']
+        purpose = request.form['purpose']
+        quality = request.form['quality']
+        respon = request.form['respon']
+        cost = request.form['cost']
+
+        piar = Piar(
+            unit_price=unit_price,
+            unit_desc=unit_desc,
+            purpose=purpose,
+            quality=quality,
+            respon=respon,
+            cost=cost,
+            article_id=id
+        )
+
+
+        session.add(piar)
+        session.commit()
+        return redirect(f'/index/{id}/pr')
+
+    else:
+        piars = Piar.query.filter(Piar.article_id.in_([id])).all()
+
+        return render_template('pr.html', piars=piars)
 
 # config openpyxl
-wb = exl.load_workbook(filename="bsg.xlsx")
+wb = exl.load_workbook(filename="test.xlsx")
 ws = wb.active
 sheet = wb["BSG-PR"]
 font_style = Font(name='Verdana', sz='11')
@@ -184,11 +160,19 @@ right = Side(border_style='thin')
 border = Border(top=top, left=left, right=right, bottom=bottom)
 border_bottom_top = Border(bottom=Side(border_style='thin'), top=Side(border_style='thin'))
 nextrow = sheet.max_row + 1
+
 @app.route('/index/<int:id>', methods=['GET', 'POST'])
 def getCSV(id):
         abc = [id]
         value = Article.query.filter(Article.id.in_(abc)).all()
         piar_value = Piar.query.filter(Piar.article_id.in_(abc)).all()
+
+        for xl in value:
+            ws['E4'] = 'SVR-PR-' + '{:05}'.format(xl.id)
+            ws['I19'] = xl.vendor
+            ws['I4'] = xl.requis
+            ws['E5'] = xl.date
+            save_name = 'SVR-PR-' + '{:05}'.format(xl.id)
 
         for i, lx in enumerate(piar_value):
             ws.merge_cells(f'C{19+i}:D{19+i}')
@@ -234,16 +218,11 @@ def getCSV(id):
             ws.row_dimensions[20 + i].height = 71
             ws[f'M{19 + i}'].alignment = alig_style_center
 
-        for xl in value:
-            ws['E4'] = 'SVR-PR-' + '{:05}'.format(xl.id)
-            ws['I19'] = xl.vendor
-            ws[f'I{nextrow}'] = xl.vendor
-            ws['I4'] = xl.requis
-            ws['E5'] = xl.date
 
-        wb.save('test.xlsx')
-
-        return send_file(download_name='save.xlsx', path_or_file='test.xlsx')
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return send_file(output, download_name=f"{save_name}.xlsx", as_attachment=True, max_age=0)
 
 if __name__=='__main__':
-    app.run(debug=True, port='8080')
+    app.run(debug=True)

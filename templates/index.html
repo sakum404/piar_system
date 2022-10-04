@@ -28,7 +28,8 @@
       <td>{{el.vendor}}</td>
       <td>{{el.total_price}} </td>
 <!--      <td>{{ el.requis }}</td>-->
-      <td><a href="/index/{{ el.id }}" class="btn btn-primary btn-sm">Download</a></td>
+      <td><a href="/index/{{ el.id }}" class="btn btn-primary btn-sm">Download</a>
+        <a href="index/{{ el.id }}/pr" class="btn btn-primary btn-sm">Open</a></td>
     </tr>
    {% endfor %}
   </table>
