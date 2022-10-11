@@ -1,24 +1,20 @@
 from io import BytesIO
-from flask import Flask, render_template, url_for, request, redirect, send_file, send_from_directory,Response
+from flask import Flask, render_template, url_for, request, redirect, send_file
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-# from flask_migrate import Migrate
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import openpyxl as exl
-from openpyxl.styles import Font, Alignment, Border, Side, PatternFill, numbers
-import os
-from tempfile import NamedTemporaryFile
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+from libs import cost_center_num, names, types
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-# migrate = Migrate(app, db)
 engine = create_engine('sqlite:///database.db', echo=True)
-
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -54,32 +50,23 @@ def index():
     return render_template('index.html', articles=articles)
 
 
-
 @app.route('/create', methods=['POST', 'GET'])
 def create():
     if request.method == 'POST':
         # form for piar index
         id = request.form.get('id')
-        # total_price = request.form['total_price']
         desc = request.form['desc']
         vendor = request.form['vendor']
         date = request.form.get('date')
         requis = request.form['requis']
         invoice = request.form['invoice']
-        # currency = request.form['currency']
-        # total_price2 = f'{total_price} {currency}'
-
 
         article = Article(id=id,
                           invoice=invoice,
                           requis=requis,
-                          # total_price=total_price2,
                           desc=desc,
                           vendor=vendor,
                           date=date)
-
-
-
 
         session.add(article)
         session.commit()
@@ -87,29 +74,6 @@ def create():
 
     else:
         articles = Article.query.all()
-
-
-        names = ['Aizada Abtay',
-                 'Anuarbek Muhammed',
-                 'Akhmediyar Salykov',
-                 'Adrian Owen',
-                 'Aizada Muratova',
-                 'Andrew Davidson',
-                 'Berik Gibbatulin',
-                 'Dias Kuraishov',
-                 'Lyailya Sarbayeva',
-                 'Nurlan Zhunussov',
-                 'John Carter',
-                 'Akmaral Izteleuova',
-                 'Adilet Kumarov',
-                 'Nurgul Mukanova',
-                 'Salamat Maukenov',
-                 'Tarasbaev Azamat',
-                 'Sergey Mazur',
-                 'Karlygash Lepessova',
-                 'Nurgul Zhubanova',
-                 'Aimira Dzhumagalieva',
-                 'Shynar Ramazanova']
 
         return render_template('create.html',  names=names, articles=articles)
 
@@ -131,9 +95,7 @@ def getPR(id):
             quality=quality,
             respon=respon,
             cost=cost,
-            article_id=id
-        )
-
+            article_id=id)
 
         session.add(piar)
         session.commit()
@@ -142,16 +104,8 @@ def getPR(id):
     else:
         piars = Piar.query.filter(Piar.article_id.in_([id])).all()
 
-        cost_center_num = {'General':'G',
-                           'Valve Contract':'V',
-                           'Pump Contract':'P',
-                           'Process diagnostics':'PD',
-                           'Operations Department':'O',
-                           'City shop':'C',
-                           'Karabatan shop':'K',
-                           'D-Island shop':'D'}
+        return render_template('pr.html', piars=piars, cost_center_num=cost_center_num.keys(), purpose=types.keys())
 
-        return render_template('pr.html', piars=piars, cost_center_num=cost_center_num.keys())
 
 # config openpyxl
 wb = exl.load_workbook(filename="test.xlsx")
@@ -182,7 +136,6 @@ border_bottom_top = Border(bottom=Side(border_style='thin'),
                            top=Side(border_style='thin'))
 
 
-
 @app.route('/index/<int:id>', methods=['GET', 'POST'])
 def getCSV(id):
         id = [id]
@@ -192,18 +145,13 @@ def getCSV(id):
         ws.merge_cells(f'I18:I{17 + last_value}')
         ws[f'I{17 + last_value}'].border = Border(bottom=Side(border_style='thin'))
 
-
         for i, lx in enumerate(piar_value):
-            if lx.cost == 'General':
-
-
-            sum_quantity = lx.quality * lx.unit_price
             ws.merge_cells(f'C{18 + i}:D{18 + i}')
             ws.merge_cells(f'F{18 + i}:G{18 + i}')
             ws.merge_cells(f'J{18 + i}:K{18 + i}')
 
             ws[f'N{18 + i}'].border = border
-            ws[f'N{18 + i}'].value = sum_quantity
+            ws[f'N{18 + i}'].value = f'=SUM(E{18 + i}*M{18 + i})'
             ws[f'N{18 + i}'].number_format = '#,##0.00 KZT'
             ws[f'N{18 + i}'].font = font_style
             ws.row_dimensions[18 + i].height = 71
@@ -238,12 +186,13 @@ def getCSV(id):
             ws[f'F{18 + i}'].alignment = alig_style_center
 
             ws[f'L{18 + i}'].border = border
-            ws[f'L{18 + i}'].value = lx.cost
+            ws[f'L{18 + i}'].value = f'{cost_center_num[lx.cost]}-{types[lx.purpose]}'
             ws[f'L{18 + i}'].font = font_style
             ws.row_dimensions[18 + i].height = 71
             ws[f'L{18 + i}'].alignment = alig_style_center
 
             ws[f'M{18 + i}'].border = border
+            ws[f'M{18 + i}'].number_format = '#,##0.00 KZT'
             ws[f'M{18 + i}'].value = lx.unit_price
             ws[f'M{18 + i}'].font = font_style
             ws.row_dimensions[18 + i].height = 71
@@ -255,6 +204,11 @@ def getCSV(id):
             ws.row_dimensions[18 + i].height = 71
             ws[f'H{18 + i}'].alignment = alig_style_center
 
+            ws[f'J{18 + i}'].border = border
+            ws[f'J{18 + i}'].value = 'ea'
+            ws[f'J{18 + i}'].font = font_style
+            ws.row_dimensions[18 + i].height = 71
+            ws[f'J{18 + i}'].alignment = alig_style_center
 
         for xl in value:
             ws['E4'] = 'SVR-PR-' + '{:05}'.format(xl.id)
@@ -264,7 +218,6 @@ def getCSV(id):
             ws['E5'].value = xl.date
 
             ws['I18'].border = border_bottom_top_test
-
             ws['I2'].border = border_bottom_top_test
             ws['J2'].border = border_bottom_top_test
             ws['K2'].border = border_bottom_top_test
@@ -273,7 +226,6 @@ def getCSV(id):
             ws['N2'].border = border_bottom_top_test
             ws['N2'].border = border_bottom_top_test
             ws['O2'].border = border_for_test_right
-
             ws['I4'].border = border_bottom_top_test
             ws['J4'].border = border_bottom_top_test
             ws['K4'].border = border_bottom_top_test
@@ -298,7 +250,8 @@ def getCSV(id):
         output = BytesIO()
         wb.save(output)
         output.seek(0)
+
         return send_file(output, download_name=f"{save_name}.xlsx", as_attachment=True)
 
 if __name__=='__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
