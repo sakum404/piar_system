@@ -41,5 +41,4 @@ types = {'Workshop equipment | Оборудование для цеха':'001',
          'Repair of fixed assets | Ремонт основных средств':'010',
          'Third-party services | Услуги третьей стороны':'011',
          'Trainings | Тренинги':'012',
-         'IT software applications, licenses, etc':'013'
-         }
+         'IT software applications, licenses, etc':'013'}

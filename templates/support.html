@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Create Piar
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <form method="POST">
+        <div class="col-sm-6">
+          <label for="del" class="form-label"></label>
+          <select name="support_del_name" id="del" class="form-select">
+            <option value="">Выберите сотрудника который хотите удалить</option>
+            {% for name in names %}
+            <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <br>
+        <div class="col-sm-6">
+            <input class="form-control" type="text" name="support_add_name" placeholder="Введите имя сотрудника что-бы добавить">
+        </div>
+        <br>
+        <button class="w-40 btn btn-primary btn" type="submit">save</button>
+    </form>
+</div>
+
+{% endblock %}

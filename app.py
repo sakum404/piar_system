@@ -8,16 +8,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import openpyxl as exl
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from libs import cost_center_num, names, types
+from wtforms.validators import ValidationError
+from libs import cost_center_num, types, names
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 engine = create_engine('sqlite:///database.db', echo=True)
-
 Session = sessionmaker(bind=engine)
 session = Session()
+
 
 
 class Article(db.Model):
@@ -36,10 +38,11 @@ class Piar(db.Model):
     id = Column(Integer, primary_key=True)
     unit_price = Column(Integer, nullable=False)
     unit_desc = Column(Text, nullable=False)
-    purpose = Column(Text, nullable=False)
+    remark = Column(Text, nullable=False)
     quality = Column(Integer, nullable=False)
     respon = Column(String(100), nullable=False)
     cost = Column(Text, nullable=False)
+    type = Column(Text, nullable=False)
     article_id = Column(Integer, ForeignKey('article.id'))
 
 
@@ -53,7 +56,6 @@ def index():
 @app.route('/create', methods=['POST', 'GET'])
 def create():
     if request.method == 'POST':
-        # form for piar index
         id = request.form.get('id')
         desc = request.form['desc']
         vendor = request.form['vendor']
@@ -77,36 +79,58 @@ def create():
 
         return render_template('create.html',  names=names, articles=articles)
 
-
+@app.route('/support', methods = ['POST', 'GET'])
+def support():
+    if request.method == 'POST':
+        add = request.form['support_add_name']
+        del_name = request.form['support_del_name']
+        try:
+            names.remove(f'{del_name}')
+            names.append(add)
+        except:
+            pass
+    else:
+        pass
+    return render_template('support.html', names=names)
 @app.route('/index/<int:id>/pr', methods=['POST', 'GET'])
 def getPR(id):
     if request.method == "POST":
         unit_price = request.form['unit_price']
         unit_desc = request.form['unit_desc']
-        purpose = request.form['purpose']
+        remark = request.form['remark']
         quality = request.form['quality']
         respon = request.form['respon']
         cost = request.form['cost']
+        type = request.form['type']
 
         piar = Piar(
             unit_price=unit_price,
             unit_desc=unit_desc,
-            purpose=purpose,
+            remark=remark,
             quality=quality,
             respon=respon,
             cost=cost,
-            article_id=id)
+            article_id=id,
+            type=type)
+
 
         session.add(piar)
         session.commit()
-        return redirect(f'/index/{id}/pr')
+        return '<script>document.location.href = document.referrer</script>'
 
     else:
         piars = Piar.query.filter(Piar.article_id.in_([id])).all()
 
-        return render_template('pr.html', piars=piars, cost_center_num=cost_center_num.keys(), purpose=types.keys())
+        return render_template('pr.html', piars=piars, cost_center_num=cost_center_num.keys(), types=types.keys())
 
+@app.route('/index/1/pr/<int:id>/del')
+def pr_delete(id):
+    piar = Piar.query.get_or_404(id)
 
+    db.session.delete(piar)
+    db.session.commit()
+
+    return '<script>document.location.href = document.referrer</script>'
 # config openpyxl
 wb = exl.load_workbook(filename="test.xlsx")
 ws = wb.active
@@ -186,7 +210,7 @@ def getCSV(id):
             ws[f'F{18 + i}'].alignment = alig_style_center
 
             ws[f'L{18 + i}'].border = border
-            ws[f'L{18 + i}'].value = f'{cost_center_num[lx.cost]}-{types[lx.purpose]}'
+            ws[f'L{18 + i}'].value = f'{cost_center_num[lx.cost]}-{types[lx.type]}'
             ws[f'L{18 + i}'].font = font_style
             ws.row_dimensions[18 + i].height = 71
             ws[f'L{18 + i}'].alignment = alig_style_center
