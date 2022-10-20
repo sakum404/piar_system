@@ -11,7 +11,12 @@
     <form method="POST" class="needs-validation">
       <div class="row g-4">
 
-        <div class="col-sm-6">
+        <div class="col-sm-12">
+          <label for="purpose" class="form-label">Purpose</label>
+          <input type="text" class="form-control " name="purpose" id="purpose" placeholder="Цель" required>
+        </div>
+
+        <div class="col-sm-4">
           <label for="requis" class="form-label">Requisitioner</label>
           <select name="requis" id="requis" class="form-select" required>
             <option value="">Requisitioner...</option>
@@ -22,11 +27,22 @@
         </div>
 
 
-        <div class="col-sm-6">
+        <div class="col-sm-4">
           <label for="vendor" class="form-label">Recommended vendor</label>
           <input type="text" class="form-control " name="vendor" id="vendor" placeholder="Рекомендуемый поставщик" required>
         </div>
 
+        <div class="col-sm-4">
+          <label for="vendor" class="form-label">Total Price</label>
+          <div class="input-group">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" title="The format should be numeric only" class="form-control " name="total_price" id="total_price" required>
+              <select name="volute" id="volute" class="input-group-text">
+                <option value="KZT">KZT</option>
+                <option value="USD">USD</option>
+                <option value="RUB">RUB</option>
+              </select>
+          </div>
+        </div>
 
 
         <div class="col-12">

@@ -1,5 +1,5 @@
 from io import BytesIO
-from flask import Flask, render_template, url_for, request, redirect, send_file
+from flask import Flask, render_template, request, redirect, send_file
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from sqlalchemy.orm import relationship
@@ -8,7 +8,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import openpyxl as exl
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from wtforms.validators import ValidationError
 from libs import cost_center_num, types, names
 
 
@@ -26,7 +25,10 @@ class Article(db.Model):
     __tablename__ = 'article'
     id = Column(Integer, primary_key=True)
     requis = Column(String(50))
+    total_price = Column(Integer, nullable=False)
     vendor = Column(Text, nullable=False)
+    volute = Column(Text, nullable=False)
+    purpose = Column(Text, nullable=False)
     desc = Column(Text, nullable=False)
     invoice = Column(Text)
     date = Column(DateTime, default=datetime.utcnow)
@@ -43,6 +45,7 @@ class Piar(db.Model):
     respon = Column(String(100), nullable=False)
     cost = Column(Text, nullable=False)
     type = Column(Text, nullable=False)
+    uom = Column(Text, nullable=False)
     article_id = Column(Integer, ForeignKey('article.id'))
 
 
@@ -60,11 +63,17 @@ def create():
         desc = request.form['desc']
         vendor = request.form['vendor']
         date = request.form.get('date')
+        total_price = request.form['total_price']
         requis = request.form['requis']
         invoice = request.form['invoice']
+        volute = request.form['volute']
+        purpose = request.form['purpose']
 
         article = Article(id=id,
+                          total_price=total_price,
                           invoice=invoice,
+                          purpose=purpose,
+                          volute=volute,
                           requis=requis,
                           desc=desc,
                           vendor=vendor,
@@ -102,12 +111,14 @@ def getPR(id):
         respon = request.form['respon']
         cost = request.form['cost']
         type = request.form['type']
+        uom = request.form['uom']
 
         piar = Piar(
             unit_price=unit_price,
             unit_desc=unit_desc,
             remark=remark,
             quality=quality,
+            uom=uom,
             respon=respon,
             cost=cost,
             article_id=id,
@@ -153,7 +164,7 @@ border_for_test_right = Border(top=Side(border_style='thin', color='A6A6A6'),
                                  right=Side(border_style='thin', color='A6A6A6'),
                                   bottom=Side(border_style='thin', color='A6A6A6'))
 
-border_bottom_top_test = Border(bottom=Side(border_style='thin', color='A6A6A6'),
+border_bottom_top_color = Border(bottom=Side(border_style='thin', color='A6A6A6'),
                                 top=Side(border_style='thin', color='A6A6A6'))
 
 border_bottom_top = Border(bottom=Side(border_style='thin'),
@@ -223,13 +234,13 @@ def getCSV(id):
             ws[f'M{18 + i}'].alignment = alig_style_center
 
             ws[f'H{18 + i}'].border = border
-            ws[f'H{18 + i}'].value = 'ea'
+            ws[f'H{18 + i}'].value = lx.uom
             ws[f'H{18 + i}'].font = font_style
             ws.row_dimensions[18 + i].height = 71
             ws[f'H{18 + i}'].alignment = alig_style_center
 
             ws[f'J{18 + i}'].border = border
-            ws[f'J{18 + i}'].value = 'ea'
+            ws[f'J{18 + i}'].value = lx.remark
             ws[f'J{18 + i}'].font = font_style
             ws.row_dimensions[18 + i].height = 71
             ws[f'J{18 + i}'].alignment = alig_style_center
@@ -237,25 +248,26 @@ def getCSV(id):
         for xl in value:
             ws['E4'] = 'SVR-PR-' + '{:05}'.format(xl.id)
             ws['I18'].value = xl.vendor
-            ws['I4'].border = border_bottom_top_test
+            ws['I4'].border = border_bottom_top_color
+            ws['I5'].value = xl.purpose
             ws['I4'].value = xl.requis
             ws['E5'].value = xl.date
 
-            ws['I18'].border = border_bottom_top_test
-            ws['I2'].border = border_bottom_top_test
-            ws['J2'].border = border_bottom_top_test
-            ws['K2'].border = border_bottom_top_test
-            ws['L2'].border = border_bottom_top_test
-            ws['M2'].border = border_bottom_top_test
-            ws['N2'].border = border_bottom_top_test
-            ws['N2'].border = border_bottom_top_test
-            ws['O2'].border = border_for_test_right
-            ws['I4'].border = border_bottom_top_test
-            ws['J4'].border = border_bottom_top_test
-            ws['K4'].border = border_bottom_top_test
-            ws['L4'].border = border_bottom_top_test
-            ws['M4'].border = border_bottom_top_test
-            ws['N4'].border = border_bottom_top_test
+            ws['I18'].border = border_bottom_top_color
+            ws['I2'].border = border_bottom_top_color
+            ws['J2'].border = border_bottom_top_color
+            ws['K2'].border = border_bottom_top_color
+            ws['L2'].border = border_bottom_top_color
+            ws['M2'].border = border_bottom_top_color
+            ws['N2'].border = border_bottom_top_color
+            ws['N2'].border = border_bottom_top_color
+            ws['O2'].border = border_bottom_top_color
+            ws['I4'].border = border_bottom_top_color
+            ws['J4'].border = border_bottom_top_color
+            ws['K4'].border = border_bottom_top_color
+            ws['L4'].border = border_bottom_top_color
+            ws['M4'].border = border_bottom_top_color
+            ws['N4'].border = border_bottom_top_color
             ws['N4'].border = border_for_test_right
             save_name = 'SVR-PR-' + '{:05}'.format(xl.id)
 
